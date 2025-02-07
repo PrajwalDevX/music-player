@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="shortcut icon" href="./images/music-player.png" type="image/png">
+    <script src="https://kit.fontawesome.com/9b204b830f.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="music-player" id="music-player">
+            <nav>
+                <div class="circle" id="search-icon">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </div>
+                <input type="text" id="search-input" placeholder="Search for a song..." />
+                <div class="circle">
+                    <i class="fa-solid fa-bars" id="menu-icon"></i>
+                </div>
+            </nav>
+            <img src="./images/pinga.jpg" alt="" class="song-img">
+            <h1 id="title">Despacito</h1>
+            <p id="artist">Luis Fonsi Ft. Puerto Rican</p>
+
+            <audio id="song">
+                <source src="./music/pinga.mp3" type="audio/mpeg">
+            </audio>
+
+            <div class="progressbar-container">
+                <div class="progress-duration-meter">
+                    <div id="current-time">0:00</div>
+                    <div id="duration">4:15</div>
+                </div>
+
+                <div class="progress-div" id="progress-div">
+                    <div class="progress" id="progress"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div><i class="fa-solid fa-backward" id="prev"></i></div>
+                <div><i class="fa-solid fa-play" id="play"></i></div>
+                <div><i class="fa-solid fa-forward" id="next"></i></div>
+            </div>
+        </div>
+        <div id="search-results" class="hidden"></div>
+        <div id="song-list" class="hidden">
+            <ul>
+                <!-- Dynamically populated song list -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const img = document.querySelector("img");
+            const song = document.getElementById("song");
+            const play = document.getElementById("play");
+            const prev = document.getElementById("prev");
+            const next = document.getElementById("next");
+            const artist = document.getElementById("artist");
+            const title = document.getElementById("title");
+            const progress = document.getElementById("progress");
+            const duration = document.getElementById("duration");
+            const current_time = document.getElementById("current-time");
+            const progress_div = document.getElementById("progress-div");
+            const searchIcon = document.getElementById("search-icon");
+            const searchInput = document.getElementById("search-input");
+            const searchResults = document.getElementById("search-results");
+            const menuIcon = document.getElementById("menu-icon");
+            const songList = document.getElementById("song-list");
+            const songListUl = songList.querySelector("ul");
+
+            let isPlaying = false;
+            let songIndex = 0;
+
+            // Add your songs here
+            // For each new song:
+            // 1. Add the MP3 file to the 'music' folder
+            // 2. Add the cover image to the 'images' folder (optional)
+            // 3. Add a new entry below with:
+            //    - name: the MP3 filename without .mp3 extension
+            //    - title: the display title of the song
+            //    - artist: the artist name
+            //    - cover: path to the cover image (optional)
+            const songs = [
+                {
+                    name: "Pinga",
+                    title: "Despacito",
+                    artist: "Luis Fonsi Ft. Puerto Rican",
+                    cover: "./images/pinga.jpg",
+                },
+                {
+                    name: "Aaj_se_pehle",
+                    title: "Aaj Se Pehle",
+                    artist: "Yesudas",
+                    cover: "./images/aaj_se_pehle.jpg",
+                },
+                // Add new songs here following the same format:
+                // {
+                //     name: "song_filename", // without .mp3
+                //     title: "Song Title",
+                //     artist: "Artist Name",
+                //     cover: "./images/cover_image.jpg" // optional
+                // },
+
+
+                {
+                    name: "Aap_Ke_Aa_Jane_Se",
+                    title: "Aap Ke Aa Jane Se",
+                    artist: "Mohammad Aziz",
+                    cover: "./images/Aap_Ke_Aa_Jane_Se.jpg",
+
+                }
+            ];
+
+            // Load Song Function
+            const loadSong = (songData) => {
+                title.textContent = songData.title;
+                artist.textContent = songData.artist;
+                song.src = `music/${songData.name}.mp3`;
+                img.src = songData.cover || './images/music-player.png'; // Use default image if cover not available
+            };
+
+            // Play Music
+            const playMusic = () => {
+                isPlaying = true;
+                song.play();
+                play.classList.replace("fa-play", "fa-pause");
+                img.classList.add("anime");
+            };
+
+            // Pause Music
+            const pauseMusic = () => {
+                isPlaying = false;
+                song.pause();
+                play.classList.replace("fa-pause", "fa-play");
+                img.classList.remove("anime");
+            };
+
+            // Next and Previous Song
+            const nextSong = () => {
+                songIndex = (songIndex + 1) % songs.length;
+                loadSong(songs[songIndex]);
+                playMusic();
+            };
+
+            const prevSong = () => {
+                songIndex = (songIndex - 1 + songs.length) % songs.length;
+                loadSong(songs[songIndex]);
+                playMusic();
+            };
+
+            // Populate the song list dynamically
+            const populateSongList = () => {
+                songListUl.innerHTML = ''; // Clear existing list
+                songs.forEach((songData, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="song-info">
+                            <span class="song-title">${songData.title}</span>
+                            <span class="song-artist">${songData.artist}</span>
+                        </div>
+                    `;
+                    li.addEventListener('click', () => {
+                        songIndex = index;
+                        loadSong(songData);
+                        playMusic();
+                        songList.classList.add('hidden');
+                    });
+                    songListUl.appendChild(li);
+                });
+            };
+
+            // Toggle song list visibility
+            menuIcon.addEventListener("click", () => {
+                songList.classList.toggle("hidden");
+                if (!songList.classList.contains("hidden")) {
+                    populateSongList(); // Populate the list each time it's shown
+                }
+            });
+
+            // Hide the song list if clicked outside
+            document.addEventListener("click", (event) => {
+                if (!menuIcon.contains(event.target) && !songList.contains(event.target)) {
+                    songList.classList.add("hidden");
+                }
+            });
+
+            // Update Progress Bar and Time
+            song.addEventListener("timeupdate", (event) => {
+                const { currentTime, duration } = event.srcElement;
+                const progressPercent = (currentTime / duration) * 100;
+                progress.style.width = `${progressPercent}%`;
+
+                const minCurrent = Math.floor(currentTime / 60);
+                const secCurrent = Math.floor(currentTime % 60).toString().padStart(2, "0");
+                current_time.textContent = `${minCurrent}:${secCurrent}`;
+
+                if (duration) {
+                    const minDuration = Math.floor(duration / 60);
+                    const secDuration = Math.floor(duration % 60).toString().padStart(2, "0");
+                    duration.textContent = `${minDuration}:${secDuration}`;
+                }
+            });
+
+            song.addEventListener("loadedmetadata", () => {
+                const minDuration = Math.floor(song.duration / 60);
+                const secDuration = Math.floor(song.duration % 60).toString().padStart(2, "0");
+                duration.textContent = `${minDuration}:${secDuration}`;
+            });
+
+            // Seek Functionality
+            progress_div.addEventListener("click", (event) => {
+                const seekTime = (event.offsetX / progress_div.clientWidth) * song.duration;
+                song.currentTime = seekTime;
+            });
+
+            // Search Functionality
+            searchInput.addEventListener("input", () => {
+                const searchTerm = searchInput.value.trim().toLowerCase();
+                if (searchTerm === "") {
+                    searchResults.style.display = "none";
+                } else {
+                    const filteredSongs = songs.filter((song) =>
+                        song.title.toLowerCase().includes(searchTerm)
+                    );
+
+                    if (filteredSongs.length > 0) {
+                        displaySearchResults(filteredSongs);
+                    } else {
+                        searchResults.innerHTML = "<p>No songs found</p>";
+                        searchResults.style.display = "block";
+                    }
+                }
+            });
+
+            const displaySearchResults = (filteredSongs) => {
+                searchResults.innerHTML = "";
+                filteredSongs.forEach((song, index) => {
+                    const songElement = document.createElement("div");
+                    songElement.classList.add("song-item");
+                    songElement.innerHTML = `
+                        <img src="${song.cover}" alt="${song.title}" />
+                        <div>
+                            <h3>${song.title}</h3>
+                            <p>${song.artist}</p>
+                        </div>
+                    `;
+                    songElement.addEventListener("click", () => {
+                        songIndex = index;
+                        loadSong(song);
+                        playMusic();
+                        searchResults.style.display = "none";
+                    });
+                    searchResults.appendChild(songElement);
+                });
+                searchResults.style.display = "block";
+            };
+
+            // Toggle Search Input
+            searchIcon.addEventListener("click", () => {
+                searchInput.classList.toggle("show");
+                searchInput.focus();
+                searchResults.classList.toggle("hidden");
+            });
+
+            // Hide Search Results on Outside Click
+            document.addEventListener("click", (event) => {
+                if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+                    searchResults.style.display = "none";
+                }
+            });
+
+            // Play Next Song on End
+            song.addEventListener("ended", nextSong);
+
+            // Initial Load
+            loadSong(songs[songIndex]);
+
+            // Event Listeners
+            play.addEventListener("click", () => (isPlaying ? pauseMusic() : playMusic()));
+            next.addEventListener("click", nextSong);
+            prev.addEventListener("click", prevSong);
+        });
+    </script>
+</body>
+</html>
